@@ -33,7 +33,7 @@ class WifiServer:
                 try:
                     data = self.client_socket.recv(1024)
                     if data:
-                        print(f"Received from Android: {data.decode().strip()}")
+                        print("Received from Android")
                         # Here, you would typically process the message from Android
                         # For now, we just acknowledge or pass to a handler
                         self.message_handler_callback(data) # Pass to message handler

@@ -77,52 +77,19 @@ object CryptoUtils {
 
     // Encrypt and tag a LoRa packet
     fun encryptAndTagLoRaPacket(senderNodeId: Int, plaintext: ByteArray): ByteArray {
-        val iv = ByteArray(8).apply { System.arraycopy(java.security.SecureRandom().generateSeed(8), 0, this, 0, 8) }
-        val ciphertext = aesCtrCrypt(AES_KEY, iv, plaintext)
-        val tag = makeTag(AES_KEY, iv, ciphertext)
-
-        val buffer = ByteBuffer.allocate(4 + 8 + ciphertext.size + 4).order(ByteOrder.BIG_ENDIAN)
-        // Placeholder for frame_cnt, will be filled by ESP32 or managed differently
-        buffer.putInt(0) // Frame count placeholder
-        buffer.put(iv)
-        buffer.put(ciphertext)
-        buffer.put(tag)
-        return buffer.array()
+        // Encryption is disabled, return raw plaintext
+        return plaintext
     }
 
     // Parse and decrypt LoRa packet
     fun parseAndDecryptLoRaPacket(packet: ByteArray): Message? {
-        if (packet.size < 17) { // Minimum size: frame_cnt(4) + iv(8) + type(1) + nodeId(1) + timestamp(4) + tag(4) = 22. But ciphertext can be variable.
-            Log.e("CryptoUtils", "Packet too short: ${packet.size} bytes")
+        if (packet.isEmpty()) {
+            Log.e("CryptoUtils", "Packet is empty")
             return null
         }
 
-        val buffer = ByteBuffer.wrap(packet).order(ByteOrder.BIG_ENDIAN)
-
-        val frameCnt = buffer.getInt()
-        val iv = ByteArray(8)
-        buffer.get(iv)
-
-        val ciphertextLength = packet.size - 4 - 8 - 4 // Total - frame_cnt - iv - tag
-        if (ciphertextLength < 1) {
-            Log.e("CryptoUtils", "Ciphertext too short: $ciphertextLength bytes")
-            return null
-        }
-        val ciphertext = ByteArray(ciphertextLength)
-        buffer.get(ciphertext)
-
-        val receivedTag = ByteArray(4)
-        buffer.get(receivedTag)
-
-        // Verify tag
-        val calculatedTag = makeTag(AES_KEY, iv, ciphertext)
-        if (!receivedTag.contentEquals(calculatedTag)) {
-            Log.e("CryptoUtils", "Tag verification failed!")
-            return null
-        }
-
-        // Decrypt
-        val plaintext = aesCtrCrypt(AES_KEY, iv, ciphertext)
+        // Decryption is disabled, treat packet as raw plaintext
+        val plaintext = packet
 
         // Parse based on message type
         val messageType = plaintext[0]
@@ -145,7 +112,7 @@ object CryptoUtils {
                     longitude = lon / 1e7,
                     message = "",
                     keyIndex = 0,
-                    tag = receivedTag.toHexString(),
+                    tag = "",
                     isIncoming = true
                 )
             }
@@ -166,7 +133,7 @@ object CryptoUtils {
                     longitude = 0.0, // Not applicable for text messages
                     message = text,
                     keyIndex = 0,
-                    tag = receivedTag.toHexString(),
+                    tag = "",
                     isIncoming = true
                 )
             }

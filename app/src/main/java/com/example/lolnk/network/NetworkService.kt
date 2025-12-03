@@ -13,14 +13,20 @@ class NetworkService(private val messageRepository: MessageRepository) {
 
     private val tcpClient = TcpClient(Constants.ESP32_IP, Constants.ESP32_PORT)
     private val serviceScope = CoroutineScope(Dispatchers.IO)
+    private var messageListener: ((ByteArray) -> Unit)? = null
 
     init {
         tcpClient.setMessageListener { packetBytes ->
             serviceScope.launch {
                 val message = CryptoUtils.parseAndDecryptLoRaPacket(packetBytes)
                 message?.let { messageRepository.insert(it) }
+                messageListener?.invoke(packetBytes)
             }
         }
+    }
+
+    fun setMessageListener(listener: (ByteArray) -> Unit) {
+        messageListener = listener
     }
 
     fun connect() {
@@ -33,15 +39,16 @@ class NetworkService(private val messageRepository: MessageRepository) {
         tcpClient.disconnect()
     }
 
-    fun sendMessage(recipientNodeId: Int, messageText: String) {
-        serviceScope.launch {
-            val timestamp = System.currentTimeMillis() / 1000L // Seconds
-            // For now, assume current device's NODE_ID is 0 (placeholder)
-            val senderNodeId = 0 // TODO: Replace with actual current device's NODE_ID
+    fun sendMessage(recipientNodeId: Int, messageText: String): ByteArray {
+        val timestamp = System.currentTimeMillis() / 1000L // Seconds
+        // For now, assume current device's NODE_ID is 0 (placeholder)
+        val senderNodeId = 0 // TODO: Replace with actual current device's NODE_ID
 
-            val plaintext = CryptoUtils.packTextMessage(senderNodeId, timestamp, messageText)
-            val encryptedPacket = CryptoUtils.encryptAndTagLoRaPacket(senderNodeId, plaintext)
+        val plaintext = CryptoUtils.packTextMessage(senderNodeId, timestamp, messageText)
+        val encryptedPacket = CryptoUtils.encryptAndTagLoRaPacket(senderNodeId, plaintext)
+        serviceScope.launch {
             tcpClient.sendMessage(encryptedPacket)
         }
+        return encryptedPacket
     }
 }

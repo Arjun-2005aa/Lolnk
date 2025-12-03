@@ -39,24 +39,14 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        (application as LolnkApplication).networkService.disconnect()
-    }
-}
+        override fun onDestroy() {
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+            super.onDestroy()
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    LolnkTheme {
-        Greeting("Android")
+            (application as LolnkApplication).networkService.disconnect()
+
+        }
+
     }
-}
+
+    

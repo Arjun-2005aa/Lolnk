@@ -1,31 +1,17 @@
 package com.example.lolnk.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Send
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,8 +37,12 @@ fun ChatScreen(application: LolnkApplication, contactNodeId: Int) {
 
     val contact = runBlocking { contactViewModel.getContactByNodeId(contactNodeId) }
     val messages by messageViewModel.messages.observeAsState(initial = emptyList())
-
+    var rawLog by remember { mutableStateOf("") }
     var messageInput by remember { mutableStateOf("") }
+
+    application.networkService.setMessageListener {
+        rawLog += "Received: ${it.toHexString()}\n"
+    }
 
     Scaffold(
         topBar = {
@@ -75,20 +65,20 @@ fun ChatScreen(application: LolnkApplication, contactNodeId: Int) {
                 )
                 IconButton(onClick = {
                     if (messageInput.isNotBlank()) {
-                        // TODO: Replace with actual message type, keyIndex, tag, lat, lon
                         val newMessage = Message(
                             type = 0, // Placeholder
                             nodeId = contactNodeId,
                             timestamp = System.currentTimeMillis(),
-                            latitude = 0.0, // Placeholder
-                            longitude = 0.0, // Placeholder
+                            latitude = 0.0,
+                            longitude = 0.0,
                             message = messageInput,
-                            keyIndex = 0, // Placeholder
-                            tag = "", // Placeholder
-                            isIncoming = false // This message is sent by current user
+                            keyIndex = 0,
+                            tag = "",
+                            isIncoming = false
                         )
                         messageViewModel.insert(newMessage)
-                        application.networkService.sendMessage(contactNodeId, messageInput) // Send via network
+                        val sentData = application.networkService.sendMessage(contactNodeId, messageInput)
+                        rawLog += "Sent: ${sentData.toHexString()}\n"
                         messageInput = ""
                     }
                 }) {
@@ -97,16 +87,27 @@ fun ChatScreen(application: LolnkApplication, contactNodeId: Int) {
             }
         }
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 8.dp),
-            reverseLayout = true // To show latest messages at the bottom
-        ) {
-            items(messages.reversed()) { message -> // Reverse to show newest at bottom
-                MessageBubble(message = message, isCurrentUser = !message.isIncoming)
+        Column(modifier = Modifier.padding(innerPadding)) {
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
+                reverseLayout = true
+            ) {
+                items(messages.reversed()) { message ->
+                    MessageBubble(message = message, isCurrentUser = !message.isIncoming)
+                }
             }
+            Text(
+                text = rawLog,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)
+                    .verticalScroll(rememberScrollState())
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(8.dp)
+            )
         }
     }
 }
@@ -129,3 +130,5 @@ fun MessageBubble(message: Message, isCurrentUser: Boolean) {
         )
     }
 }
+
+fun ByteArray.toHexString() = joinToString("") { "%02x".format(it) }

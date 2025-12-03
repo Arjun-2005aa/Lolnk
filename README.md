@@ -1,15 +1,12 @@
-# LoRa Encrypted Messaging App
-
-A secure, peer-to-peer messaging application that uses LoRa (Long Range) communication via ESP32 modules for encrypted messaging with GPS location sharing capabilities.
-
 ## Features
 
-- **Encrypted Messaging**: Dynamic per-message key rotation using AES-CTR encryption
-- **GPS Location Sharing**: Send and receive location data with messages
-- **Live Location Tracking**: Real-time location updates every 5 seconds
-- **Peer-to-Peer Architecture**: No cloud servers required
-- **Modern UI**: Jetpack Compose with Material3 design
-- **WiFi Connectivity**: ESP32 creates WiFi hotspot for phone connection
+- **Contact Management**: Add and delete contacts with unique Node IDs.
+- **Encrypted Messaging**: Dynamic per-message key rotation using AES-CTR encryption.
+- **GPS Location Sharing**: Send and receive location data with messages.
+- **Live Location Tracking**: Real-time location updates every 5 seconds.
+- **Peer-to-Peer Architecture**: No cloud servers required.
+- **Modern UI**: Jetpack Compose with Material3 design.
+- **WiFi Connectivity**: ESP32 creates WiFi hotspot for phone connection.
 
 ## Architecture
 
@@ -20,68 +17,75 @@ Android App (Kotlin) ↔ WiFi ↔ ESP32 (MicroPython) ↔ LoRa E32 ↔ Other ESP
 ## Components
 
 ### Android App
-- **Database**: Room database for local message storage
-- **Encryption**: Dynamic key derivation with per-message rotation
-- **UI**: Jetpack Compose with rounded, modern design
-- **Networking**: TCP socket communication with ESP32
+- **Database**: Room database for local message storage.
+- **Encryption**: Dynamic key derivation with per-message rotation.
+- **UI**: Jetpack Compose with rounded, modern design.
+- **Networking**: TCP socket communication with ESP32.
 
 ### ESP32 MicroPython
-- **WiFi AP**: Creates "LoRa_Chat_XXXX" network
-- **TCP Server**: Handles Android app connections
-- **LoRa Bridge**: Forwards messages between Android and LoRa
-- **Dual Mode**: Messaging mode and live location mode
+- **WiFi AP**: Creates "LoRa_Chat_XXXX" network.
+- **TCP Server**: Handles Android app connections.
+- **LoRa Bridge**: Forwards messages between Android and LoRa.
+- **Dual Mode**: Messaging mode and live location mode.
 
 ## Installation
 
 ### Android App
 
-1. Open the project in Android Studio
-2. Sync Gradle files
-3. Build and install on Android device (API 24+)
+1.  Open the project in Android Studio.
+2.  Sync Gradle files.
+3.  Build and install on Android device (API 24+).
 
 ### ESP32 Setup
 
-1. Install MicroPython on ESP32
-2. Upload the MicroPython files to ESP32:
-   - `config.py` - Configuration
-   - `wifi_server.py` - WiFi AP and TCP server
-   - `message_handler.py` - Message processing
-   - `receiver.py` - LoRa packet handling
-   - `main.py` - Main application
-
-3. Connect LoRa E32 module:
-   - TX: GPIO 17
-   - RX: GPIO 16
-   - Baudrate: 9600
-
-4. Power on ESP32 and connect to "LoRa_Chat_XXXX" WiFi network
+1.  Install MicroPython on ESP32.
+2.  Upload the MicroPython files to ESP32:
+    -   `config.py` - Configuration.
+    -   `wifi_server.py` - WiFi AP and TCP server.
+    -   `message_handler.py` - Message processing.
+    -   `receiver.py` - LoRa packet handling.
+    -   `main.py` - Main application.
+3.  Connect LoRa E32 module:
+    -   TX: GPIO 17
+    -   RX: GPIO 16
+    -   Baudrate: 9600
+4.  Power on ESP32 and connect to "LoRa_Chat_XXXX" WiFi network.
 
 ## Usage
 
 ### Initial Setup
 
-1. **Connect to ESP32**: Phone connects to ESP32's WiFi network
-2. **Set Node ID**: Configure unique node ID for each device
-3. **Add Contacts**: Add other users by their Node ID
+1.  **Connect to ESP32**: Ensure your Android phone is connected to the ESP32's WiFi network (e.g., "LoRa_Chat_XXXX").
+2.  **Set Node ID**: Each ESP32 device should have a unique `NODE_ID` configured in its `config.py` file. This ID is crucial for identifying devices in the network.
+3.  **Add Contacts**:
+    -   Open the Android app and navigate to the contact list.
+    -   Tap the floating action button (plus icon) to add a new contact.
+    -   Enter a descriptive name for the contact and their unique Node ID.
+    -   Tap "Add" to save the contact.
+4.  **Delete Contacts**:
+    -   From the contact list, locate the contact you wish to remove.
+    -   Tap the "Delete" button next to the contact's name.
+    -   The contact will be removed from your list.
 
 ### Messaging
 
-1. **Send Message**: Type message and send (optionally with location)
-2. **Receive Message**: Messages appear in chat interface
-3. **Location Sharing**: Tap location button to share current GPS coordinates
+1.  **Select Contact**: From the contact list, tap on a contact's name to open the chat screen.
+2.  **Send Message**: Type your message in the input field and tap the send icon. You can optionally tap the location icon to include your current GPS coordinates with the message.
+3.  **Receive Message**: Incoming messages from other LoRa devices will appear in the chat interface.
+4.  **Location Sharing**: If a message includes location data, it will be displayed within the chat bubble.
 
 ### Live Location Mode
 
-1. **Enable Tracking**: Switch to live location mode
-2. **Automatic Updates**: Location sent every 5 seconds
-3. **Real-time Display**: View other users' live locations
+1.  **Enable Tracking**: Within a chat, switch to live location mode if available.
+2.  **Automatic Updates**: Your device will automatically send location updates every 5 seconds.
+3.  **Real-time Display**: View other users' live locations directly in the app.
 
 ## Encryption Details
 
 ### Key Generation
-- Initial key generated when first contact is added
-- 16-byte random AES key
-- Multiplier calculated as `nodeId1 × nodeId2`
+- Initial key generated when first contact is added.
+- 16-byte random AES key.
+- Multiplier calculated as `nodeId1 × nodeId2`.
 
 ### Dynamic Key Rotation
 ```
@@ -112,27 +116,27 @@ const val LOCATION_UPDATE_INTERVAL = 5000L
 
 ## Security Features
 
-- **End-to-End Encryption**: Messages encrypted before transmission
-- **Dynamic Keys**: Each message uses a unique encryption key
-- **Authentication**: HMAC-like tags for message integrity
-- **No Cloud Storage**: All data stored locally on devices
+- **End-to-End Encryption**: Messages encrypted before transmission.
+- **Dynamic Keys**: Each message uses a unique encryption key.
+- **Authentication**: HMAC-like tags for message integrity.
+- **No Cloud Storage**: All data stored locally on devices.
 
 ## Troubleshooting
 
 ### Connection Issues
-- Ensure phone is connected to ESP32's WiFi network
-- Check ESP32 is powered and running MicroPython
-- Verify LoRa E32 module connections
+- Ensure phone is connected to ESP32's WiFi network.
+- Check ESP32 is powered and running MicroPython.
+- Verify LoRa E32 module connections.
 
 ### Message Issues
-- Check encryption keys are properly synchronized
-- Verify both devices have correct Node IDs
-- Ensure LoRa modules are within range
+- Check encryption keys are properly synchronized.
+- Verify both devices have correct Node IDs.
+- Ensure LoRa modules are within range.
 
 ### Location Issues
-- Grant location permissions to Android app
-- Check GPS is enabled and has signal
-- Verify location services are working
+- Grant location permissions to Android app.
+- Check GPS is enabled and has signal.
+- Verify location services are working.
 
 ## File Structure
 
@@ -177,13 +181,11 @@ This project is open source and available under the MIT License.
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+1.  Fork the repository.
+2.  Create a feature branch.
+3.  Make your changes.
+4.  Submit a pull request.
 
 ## Support
 
 For issues and questions, please create an issue in the repository.
-
-

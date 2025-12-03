@@ -1,7 +1,10 @@
 package com.example.lolnk.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -46,9 +49,15 @@ fun ContactListScreen(application: LolnkApplication, navController: NavControlle
     ) {
         LazyColumn(modifier = Modifier.padding(it)) {
             items(contacts) { contact ->
-                ContactRow(contact) {
-                    navController.navigate("chat/${contact.nodeId}")
-                }
+                ContactRow(
+                    contact = contact,
+                    onClick = {
+                        navController.navigate("chat/${contact.nodeId}")
+                    },
+                    onDelete = {
+                        contactViewModel.delete(contact)
+                    }
+                )
             }
         }
     }
@@ -67,8 +76,19 @@ fun ContactListScreen(application: LolnkApplication, navController: NavControlle
 }
 
 @Composable
-fun ContactRow(contact: Contact, onClick: () -> Unit) {
-    Text(text = contact.name, modifier = Modifier.clickable(onClick = onClick).padding(16.dp))
+fun ContactRow(contact: Contact, onClick: () -> Unit, onDelete: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(text = contact.name)
+        Button(onClick = onDelete) {
+            Text("Delete")
+        }
+    }
 }
 
 @Composable
